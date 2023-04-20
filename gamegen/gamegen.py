@@ -1,98 +1,110 @@
-import pyglet
-from pyglet.gl import *
-import numpy as np
+import arcade
 from params import *
-from pyglet.window import key
+import numpy as np
+from PIL import Image
 
-
-window = pyglet.window.Window(SCREEN_WIDTH, SCREEN_HEIGHT, 'Game Agent')
-glClearColor(0.1, 0.1, 0.1, 1.0)
-
-wall_def_vert = np.array([[0.05, 0.05], [0.95, 0.05], [0.95, 0.95], [0.05, 0.95]])
-wall_def_color = np.ones((4, 3), dtype=np.uint8) * 128
-
-
-
-class World:
-    def __init__(self, width, height, tile_width, tile_height, margin=1):
-        self.width = width
-        self.height = height
-        self.tile_width = tile_width
-        self.tile_height = tile_height
-        self.margin = margin
-        self.level = np.random.choice([0, 1], size=(width, height), p=[0.4, 0.6])
+class Game(arcade.Window):
+    def __init__(self, width, height, title):
+        super().__init__(width, height, title)
+        arcade.set_background_color(arcade.color.BLACK)
         
-        self.camera_x = 0
-        self.camera_y = 0
+        self.wall_list = None
+        self.player_list = None
+        self.player_sprite = None        
+        self.level = None
+        self.camera = None
+        
+
+    def setup(self):
+        self.player_list = arcade.SpriteList()
+        self.wall_list = arcade.SpriteList(use_spatial_hash=True)
+        
+        self.level = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.9, 0.1])
+        self.level[:, 0] = 1
+        
+        wall_array = np.zeros((TILE_WIDTH, TILE_HEIGHT, 4), dtype=np.uint8)
+        wall_array[:, :, 3] = 255
+        wall_array[:, :, :3] = 128
+        wall_texture = arcade.Texture(name = "wall", image = Image.fromarray(wall_array))
+                
+        player_array = np.zeros((16, 16, 4), dtype=np.uint8)
+        player_array[:, :, 0] = 255
+        player_array[:, :, 3] = 255        
+        player_texture = arcade.Texture(name = "player", image = Image.fromarray(player_array))
+        
+        for x in range(WORLD_WIDTH):
+            for y in range(WORLD_HEIGHT):
+                if self.level[x, y] > 0:
+                    wall = arcade.Sprite(texture = wall_texture)
+                    wall.center_x = x * TILE_WIDTH + TILE_WIDTH//2
+                    wall.center_y = y * TILE_HEIGHT + TILE_HEIGHT//2
+                    self.wall_list.append(wall)
+        
+        
+        self.player_sprite = arcade.Sprite(texture = player_texture)
+        self.player_sprite.center_x = SCREEN_WIDTH//2
+        self.player_sprite.center_y = SCREEN_HEIGHT//2
+        
+        self.player_list.append(self.player_sprite)
+        
+        self.physics_engine = arcade.PhysicsEnginePlatformer(
+            self.player_sprite, gravity_constant=GRAVITY, walls=self.wall_list)
+        
+        self.camera = arcade.Camera(self.width, self.height)
+        
+    def on_draw(self):
+        self.camera.use()
+        self.clear()
+        self.wall_list.draw()
+        self.player_list.draw()
     
-    def update(self):
-        
-        sx = self.camera_x
-        sy = self.camera_y
-        ex = self.camera_x + SCREEN_WIDTH
-        ey = self.camera_y + SCREEN_WIDTH
-        
-        minx = max(sx // self.tile_width, 0)
-        maxx = ex // self.tile_width + 1
-        miny = max(sy // self.tile_height, 0)
-        maxy = ey // self.tile_height + 1
-        
-        tw = self.tile_width
-        th = self.tile_height
-        quad = wall_def_vert.copy()
-        quad[:, 0] = quad[:, 0] * tw
-        quad[:, 1] = quad[:, 1] * th
+    def on_key_press(self, key, modifiers):
     
-        viewable = self.level[minx:maxx, miny:maxy]
-        walls = np.array(np.where(viewable > 0)).T + [minx, miny]
-        num_walls = walls.shape[0]
-        vertices = np.zeros((num_walls, 4, 2), dtype=np.float32)
-        walls[:, 0] = walls[:, 0] * tw - self.camera_x
-        walls[:, 1] = walls[:, 1] * th - self.camera_y
+        if key == arcade.key.UP or key == arcade.key.SPACE:
+            if self.physics_engine.can_jump():
+                self.player_sprite.change_y = PLAYER_JUMP_SPEED
+        elif key == arcade.key.LEFT:
+            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
+        elif key == arcade.key.RIGHT:
+            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
         
-        for vt in range(4):
-            vertices[:, vt, :] = quad[vt, :] + walls
+                
+    def on_key_release(self, key, modifiers):
+        """Called when the user releases a key."""
 
-        colors = np.zeros((num_walls, 4, 3), dtype=np.uint8)
-        colors[:, :, :] = 128
+        if key == arcade.key.UP or key == arcade.key.W:
+            self.player_sprite.change_y = 0
+        elif key == arcade.key.DOWN or key == arcade.key.S:
+            self.player_sprite.change_y = 0
+        elif key == arcade.key.LEFT or key == arcade.key.A:
+            self.player_sprite.change_x = 0
+        elif key == arcade.key.RIGHT or key == arcade.key.D:
+            self.player_sprite.change_x = 0
+            
+    def center_camera_to_player(self):
+        screen_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
+        screen_center_y = self.player_sprite.center_y - (
+            self.camera.viewport_height / 2
+        )
 
-        vertices = vertices.flatten()
-        colors = colors.flatten()
+        # Don't let camera travel past 0
+        if screen_center_x < 0:
+            screen_center_x = 0
+        if screen_center_y < 0:
+            screen_center_y = 0
+         
+        player_centered = screen_center_x, screen_center_y
 
-        self.vertex_list = pyglet.graphics.vertex_list(num_walls * 4,
-            ('v2f', vertices),
-            ('c3B', colors))
-        
-    def draw(self):
-        self.vertex_list.draw(GL_QUADS)        
-        
-world = World(500, 500, TILE_WIDTH, TILE_HEIGHT)
-fps_display = pyglet.window.FPSDisplay(window=window)
-keys = key.KeyStateHandler()
-window.push_handlers(keys)
-
-def move_camera(dt):
+        self.camera.move_to(player_centered)
     
-    if keys[key.LEFT]:
-        world.camera_x -= 4
-    if keys[key.RIGHT]:
-        world.camera_x += 4
-    if keys[key.UP]:
-        world.camera_y += 4
-    if keys[key.DOWN]:
-        world.camera_y -= 4
+    def on_update(self, delta_time):
+        self.physics_engine.update()
+        self.center_camera_to_player()
+                
+def main():
+    window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE)
+    window.setup()
+    arcade.run()
     
-    world.update()
-
-
-pyglet.clock.schedule(move_camera)
-world.update()
-@window.event
-def on_draw():
-
-    window.clear()
-    world.draw()
-    fps_display.draw()
-
-
-pyglet.app.run()
+if __name__ == "__main__":
+    main()
