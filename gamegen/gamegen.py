@@ -27,7 +27,7 @@ class Game(arcade.Window):
         wall_array[:, :, :3] = 128
         wall_texture = arcade.Texture(name = "wall", image = Image.fromarray(wall_array))
                 
-        player_array = np.zeros((16, 16, 4), dtype=np.uint8)
+        player_array = np.zeros((28, 28, 4), dtype=np.uint8)
         player_array[:, :, 0] = 255
         player_array[:, :, 3] = 255        
         player_texture = arcade.Texture(name = "player", image = Image.fromarray(player_array))
