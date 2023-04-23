@@ -6,7 +6,7 @@ import pyglet
 
 class Game(arcade.Window):
     def __init__(self, width, height, title):
-        super().__init__(width, height, title, fullscreen=False)
+        super().__init__(width, height, title, fullscreen=False, vsync=True)
         arcade.set_background_color(arcade.color.BLACK)
         
         self.wall_list = None
@@ -17,6 +17,10 @@ class Game(arcade.Window):
         
         self.key_left = False
         self.key_right = False
+        
+        self.dash_timer = -1
+        self.dash_direction = 1
+        
 
         
     def setup(self):
@@ -30,6 +34,10 @@ class Game(arcade.Window):
         wall_array = np.zeros((TILE_WIDTH, TILE_HEIGHT, 4), dtype=np.uint8)
         wall_array[:, :, 3] = 255
         wall_array[:, :, :3] = 128
+        wall_array[0, :, :3] = 0
+        wall_array[-1, :, :3] = 0
+        wall_array[:, 0, :3] = 0
+        wall_array[:, -1, :3] = 0
         wall_texture = arcade.Texture(name = "wall", image = Image.fromarray(wall_array))
                 
         player_array = np.zeros((PLAYER_WIDTH, PLAYER_HEIGHT, 4), dtype=np.uint8)
@@ -78,6 +86,7 @@ class Game(arcade.Window):
         self.player_list.draw()
         
     def on_joybutton_press(self, _joystick, button):
+        print (button)
         if button == 0:
             if self.physics_engine.can_jump():
                 self.player_sprite.change_y = PLAYER_JUMP_SPEED
@@ -143,6 +152,19 @@ class Game(arcade.Window):
             x_movement-=PLAYER_MOVEMENT_SPEED
         if self.key_right:
             x_movement+=PLAYER_MOVEMENT_SPEED
+        if self.dash_timer > 0:
+            self.dash_timer -= 1
+            x_movement= PLAYER_DASH_SPEED * self.dash_direction
+        else:
+            if self.joystick.z < -0.8:
+                print ('initiating dash')
+                self.dash_timer = 10
+                self.dash_direction = 1
+            if self.joystick.z > 0.8:
+                print ('initiating left dash')
+                self.dash_time = 10
+                self.dash_direction = -1
+
         self.player_sprite.change_x = x_movement
         
         if self.player_sprite.change_y > 0.0:
@@ -155,10 +177,7 @@ class Game(arcade.Window):
         self.physics_engine.update()
         self.center_camera_to_player()
         
-
-        
-    
-                
+       
 def main():
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE)
     window.setup()
