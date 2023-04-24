@@ -2,7 +2,6 @@ import arcade
 from params import *
 import numpy as np
 from PIL import Image
-import pyglet
 
 class Game(arcade.Window):
     def __init__(self, width, height, title):
@@ -21,10 +20,8 @@ class Game(arcade.Window):
         self.dash_timer = -1
         self.dash_direction = 1
         
-
-        
     def setup(self):
-        pyglet.options["xinput_controllers"] = False
+        
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList(use_spatial_hash=True)
         
@@ -67,31 +64,14 @@ class Game(arcade.Window):
         self.camera = arcade.Camera(self.width, self.height)
         self.world_pixel_height = WORLD_HEIGHT * TILE_HEIGHT
         self.world_pixel_width = WORLD_WIDTH * TILE_WIDTH
-        
-        joysticks = arcade.get_joysticks()
 
-        # If we have any...
-        if joysticks:
-            print ('joystick found')
-            self.joystick = joysticks[0]
-            self.joystick.open()
-            self.joystick.push_handlers(self)
-        else:
-            print ('joystick not found')
         
     def on_draw(self):
         self.camera.use()
         self.clear()
         self.wall_list.draw()
         self.player_list.draw()
-        
-    def on_joybutton_press(self, _joystick, button):
-        print (button)
-        if button == 0:
-            if self.physics_engine.can_jump():
-                self.player_sprite.change_y = PLAYER_JUMP_SPEED
-                self.physics_engine.increment_jump_counter()
-                
+                      
     def on_key_press(self, key, modifiers):
     
         if key == arcade.key.UP or key == arcade.key.SPACE:
@@ -136,35 +116,17 @@ class Game(arcade.Window):
         self.camera.move_to(player_centered)
     
     def on_update(self, delta_time):
-        
-        
         x_movement = 0.0
-        if self.joystick:
-
-            # x-axis
-            x_movement = self.joystick.x * PLAYER_MOVEMENT_SPEED
-     
-            # Set a "dead zone" to prevent drive from a centered joystick
-            if abs(x_movement) < DEAD_ZONE:
-                x_movement = 0
             
         if self.key_left:
-            x_movement-=PLAYER_MOVEMENT_SPEED
+            x_movement-=PLAYER_MOVEMENT_FORCE
         if self.key_right:
-            x_movement+=PLAYER_MOVEMENT_SPEED
+            x_movement+=PLAYER_MOVEMENT_FORCE
         if self.dash_timer > 0:
             self.dash_timer -= 1
             x_movement= PLAYER_DASH_SPEED * self.dash_direction
-        else:
-            if self.joystick.z < -0.8:
-                print ('initiating dash')
-                self.dash_timer = 10
-                self.dash_direction = 1
-            if self.joystick.z > 0.8:
-                print ('initiating left dash')
-                self.dash_time = 10
-                self.dash_direction = -1
-
+      
+            
         self.player_sprite.change_x = x_movement
         
         if self.player_sprite.change_y > 0.0:
