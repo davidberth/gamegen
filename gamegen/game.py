@@ -29,10 +29,13 @@ class Game(arcade.Window):
         
     def setup(self):
         self.ship = ship.Ship(22, 25)
-        self.ship.center_x = self.screen_half_width
-        self.ship.center_y = self.screen_half_height
         self.world = world.World()
         self.world.setup()
+        
+        start_x, start_y = self.world.find_starting_position()        
+        self.ship.center_x = start_x
+        self.ship.center_y = start_y
+        
         self.physics_engine = arcade.PhysicsEngineSimple(self.ship, self.world.wall_list)
         self.camera = arcade.Camera()        
         
@@ -108,9 +111,9 @@ class Game(arcade.Window):
         camera_x, camera_y = self.world.clamp_camera(camera_x, camera_y, 
                         SCREEN_WIDTH, SCREEN_HEIGHT)
         
-        results = self.ship.collides_with_list(self.world.object_list)
-        if results:
-            print (results[0].tile_type)
+        #results = self.ship.collides_with_list(self.world.object_list)
+        #if results:
+        #    print (results[0].tile_type)
         
         self.camera.move_to((camera_x, camera_y))
          

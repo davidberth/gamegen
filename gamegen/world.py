@@ -51,6 +51,14 @@ class World:
         self.level[:, 0] = 1
         self.level[:, -1] = 1
         
+    def find_starting_position(self):
+        starting_position = np.where(self.level == 2)
+        if starting_position:
+            x, y = (starting_position[0][0] + 0.5) * TILE_WIDTH, (starting_position[1][0] + 0.5) * TILE_HEIGHT
+        else:
+            x, y = 100, 100
+        return x, y
+        
     def clamp_camera(self, x, y, width, height):
         if x < 0:
             x = 0
