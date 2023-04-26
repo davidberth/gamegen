@@ -59,8 +59,6 @@ class Game(arcade.Window):
             self.key_down = True
                 
     def on_key_release(self, key, modifiers):
-        """Called when the user releases a key."""
-
         if key == arcade.key.A:
             self.key_left = False
         elif key == arcade.key.D:
@@ -101,14 +99,18 @@ class Game(arcade.Window):
         self.ship.update(self.mouse_world_x, self.mouse_world_y)
         self.ship.change_x *= SHIP_FRICTION
         self.ship.change_y *= SHIP_FRICTION
-        
-            
+
         self.physics_engine.update()
+        
         camera_x = self.ship.center_x - self.screen_half_width
         camera_y = self.ship.center_y - self.screen_half_height
         
         camera_x, camera_y = self.world.clamp_camera(camera_x, camera_y, 
                         SCREEN_WIDTH, SCREEN_HEIGHT)
+        
+        results = self.ship.collides_with_list(self.world.object_list)
+        if results:
+            print (results[0].tile_type)
         
         self.camera.move_to((camera_x, camera_y))
          
