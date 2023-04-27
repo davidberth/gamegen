@@ -16,8 +16,8 @@ class World:
         #self.level = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.95, 0.05])
         self.level = np.zeros((WORLD_WIDTH, WORLD_HEIGHT), dtype=np.uint8)
         self.fill_walls()
-        self.level[5, 5] = 2
-        self.level[25, 25] = 3
+        self.level[2, 7] = 2
+        self.level[17, 7] = 3
         
         wall_array = np.zeros((TILE_WIDTH, TILE_HEIGHT, 4), dtype=np.uint8)
         wall_array[:, :, 3] = 255
