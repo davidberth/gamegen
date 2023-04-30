@@ -4,7 +4,8 @@ tiles = [
 ['empty', arcade.color.BLACK, 255],
 ['wall', arcade.color.GRAY, 255],
 ['start', arcade.color.BLUE, 190],
-['goal', arcade.color.GREEN, 190]
+['goal', arcade.color.GREEN, 190],
+['coin', arcade.color.GOLD, 110],
 ]
     
 class Tile(arcade.Sprite):

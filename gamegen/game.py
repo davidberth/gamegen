@@ -1,7 +1,11 @@
 import arcade
 import world
 import ship
+import bullet
 from params import *
+import numpy as np
+from PIL import Image
+import math
 
 class Game(arcade.Section):
     def __init__(self, left: int, bottom: int, width: int, height: int, **kwargs):
@@ -22,12 +26,19 @@ class Game(arcade.Section):
         self.gui = None
         self.physics_engine = None
         self.world_camera = None
-      
-        
+    
         self.screen_half_width = self.width / 2
         self.screen_half_height = self.height / 2
         
         self.score = 0
+        self.previous_score = 0
+        self.max_score = 0
+        self.goal_reached = False
+        self.bullets = None
+        self.bullet_texture = None
+        self.bullet_force_x = 0.0
+        self.bullet_force_y = 0.0
+                
         
     def setup(self):
         self.ship = ship.Ship(22, 25)
@@ -40,6 +51,11 @@ class Game(arcade.Section):
         
         self.physics_engine = arcade.PhysicsEngineSimple(self.ship, self.world.wall_list)
         self.world_camera = arcade.Camera(self.width, self.height)        
+        self.bullets = arcade.SpriteList()
+        bullet_array = np.zeros((10, 10, 4), dtype=np.uint8)
+        bullet_array[:, :, 3] = 255
+        bullet_array[:, :, 0] = 255
+        self.bullet_texture = arcade.Texture(name = "bullet", image = Image.fromarray(bullet_array))
         
         
     def on_draw(self):
@@ -48,6 +64,24 @@ class Game(arcade.Section):
         self.world_camera.use()
         self.world.draw()
         self.ship.draw()
+        self.bullets.draw()
+        
+    def on_mouse_press(self, x, y, button, modifiers):
+        self.mouse_x = x
+        self.mouse_y = y
+        self.mouse_world_x = self.world_camera.position[0] + x
+        self.mouse_world_y = self.world_camera.position[1] + y
+        
+        bul = bullet.Bullet(self.bullet_texture)
+        
+        bul.center_x = self.ship.center_x
+        bul.center_y = self.ship.center_y
+        bul.angle = self.ship.turret_angle
+        bul.change_x = math.cos(math.radians(bul.angle)) * BULLET_SPEED
+        bul.change_y = math.sin(math.radians(bul.angle)) * BULLET_SPEED
+        self.bullet_force_x = -bul.change_x * BULLET_FORCE
+        self.bullet_force_y = -bul.change_y * BULLET_FORCE
+        self.bullets.append(bul)
         
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_x = x 
@@ -98,6 +132,9 @@ class Game(arcade.Section):
             self.ship.change_y = PLAYER_MOVEMENT_SPEED
         if self.ship.change_y < -PLAYER_MOVEMENT_SPEED:
             self.ship.change_y = -PLAYER_MOVEMENT_SPEED
+            
+        self.ship.change_x+=self.bullet_force_x
+        self.ship.change_y+=self.bullet_force_y
         
         self.mouse_world_x = self.mouse_x + self.world_camera.position[0]
         self.mouse_world_y = self.mouse_y + self.world_camera.position[1]   
@@ -105,6 +142,9 @@ class Game(arcade.Section):
         self.ship.update(self.mouse_world_x, self.mouse_world_y)
         self.ship.change_x *= SHIP_FRICTION
         self.ship.change_y *= SHIP_FRICTION
+
+        self.bullet_force_x*=0.93
+        self.bullet_force_y*=0.93
 
         self.physics_engine.update()
         
@@ -114,10 +154,21 @@ class Game(arcade.Section):
         camera_x, camera_y = self.world.clamp_camera(camera_x, camera_y, 
                         self.width, self.height)
         
-        #results = self.ship.collides_with_list(self.world.object_list)
-        #if results:
-        #    print (results[0].tile_type)
-        
+        results = self.ship.collides_with_list(self.world.object_list)
+        if results:
+            if results[0].tile_type == 4:
+                self.score+=3
+                results[0].remove_from_sprite_lists()
+            elif results[0].tile_type == 3:
+                self.score+=10
+                self.goal_reached = True
+                
         self.world_camera.move_to((camera_x, camera_y))
         
+        for bul in self.bullets:
+            bul.update()
+            if bul.center_x < 0 or bul.center_x > self.world.world_pixel_width or \
+                        bul.center_y < 0 or bul.center_y > self.world.world_pixel_height:
+                bul.remove_from_sprite_lists()
+            
         self.score-=delta_time

@@ -11,13 +11,17 @@ class World:
         
     def setup(self):
         
+        np.random.seed(42)
+        
         self.wall_list = arcade.SpriteList(use_spatial_hash=True)
         self.object_list = arcade.SpriteList(use_spatial_hash=True)
         #self.level = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.95, 0.05])
         self.level = np.zeros((WORLD_WIDTH, WORLD_HEIGHT), dtype=np.uint8)
         self.fill_walls()
+        self.place_coins()
         self.level[2, 7] = 2
         self.level[17, 7] = 3
+        
         
         wall_array = np.zeros((TILE_WIDTH, TILE_HEIGHT, 4), dtype=np.uint8)
         wall_array[:, :, 3] = 255
@@ -50,6 +54,10 @@ class World:
         self.level[-1, :] = 1
         self.level[:, 0] = 1
         self.level[:, -1] = 1
+        
+    def place_coins(self):
+        coins = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.9, 0.1])
+        self.level[(coins == 1) & (self.level == 0)] = 4
         
     def find_starting_position(self):
         starting_position = np.where(self.level == 2)
