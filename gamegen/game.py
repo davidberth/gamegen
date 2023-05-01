@@ -33,7 +33,6 @@ class Game(arcade.View):
         self.game_half_height = self.game_height / 2
         
         self.bullets = None
-        self.bullet_texture = None
         self.mouse = arcade.SpriteSolidColor(10, 10, arcade.color.YELLOW)
         self.bullet_force_x = 0.0
         self.bullet_force_y = 0.0
@@ -163,6 +162,7 @@ class Game(arcade.View):
                 if self.hud.max_score < self.hud.score:
                     self.hud.max_score = int(self.hud.score)
                 self.hud.score = 0.0
+                self.hud.episode+=1
                 self.reset()
                 
         self.world_camera.move_to((camera_x, camera_y))
@@ -172,6 +172,10 @@ class Game(arcade.View):
             if bul.center_x < 0 or bul.center_x > self.world.world_pixel_width or \
                         bul.center_y < 0 or bul.center_y > self.world.world_pixel_height:
                 bul.remove_from_sprite_lists()
+            results = bul.collides_with_list(self.world.wall_list)
+            if results:
+                bul.remove_from_sprite_lists()
+                results[0].color = arcade.color.DARK_BLUE_GRAY
             
         self.hud.score-=delta_time
         

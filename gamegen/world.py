@@ -44,7 +44,7 @@ class World:
         self.level[:, -1] = 1
         
     def place_walls(self):
-        walls = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.95, 0.05])
+        walls = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.98, 0.02])
         self.level[(walls == 1) & (self.level == 0)] = 1
     
     def place_coins(self):
