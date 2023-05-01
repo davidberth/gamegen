@@ -11,11 +11,10 @@ class World:
         
     def reset(self):
         
-        np.random.seed(24)
+        np.random.seed(34)
         
         self.wall_list = arcade.SpriteList(use_spatial_hash=True)
         self.object_list = arcade.SpriteList(use_spatial_hash=True)
-        #self.level = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.95, 0.05])
         self.level = np.zeros((WORLD_WIDTH, WORLD_HEIGHT), dtype=np.uint8)
         self.fill_walls()
         self.place_walls()
@@ -36,6 +35,7 @@ class World:
                     
         self.world_pixel_height = WORLD_HEIGHT * TILE_HEIGHT
         self.world_pixel_width = WORLD_WIDTH * TILE_WIDTH
+        
         
     def fill_walls(self):
         self.level[0, :] = 1
