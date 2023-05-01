@@ -1,6 +1,6 @@
 import arcade
 import game
-import info_bar
+import gamegen.hud as hud
 from params import *
 
 class MainView(arcade.View):
@@ -8,7 +8,7 @@ class MainView(arcade.View):
         super().__init__()
         
         self.game = game.Game(0, 0, self.window.width, self.window.height - GUI_HEIGHT)
-        self.info_bar = info_bar.InfoBar(0, self.window.height - GUI_HEIGHT, self.window.width, GUI_HEIGHT)
+        self.info_bar = hud.HUD(0, self.window.height - GUI_HEIGHT, self.window.width, GUI_HEIGHT)
         
         self.section_manager.add_section(self.game)
         self.section_manager.add_section(self.info_bar)
