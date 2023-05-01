@@ -13,8 +13,8 @@ class MainView(arcade.View):
         self.section_manager.add_section(self.game)
         self.section_manager.add_section(self.info_bar)
         
-    def setup(self):
-        self.game.setup()
+    def reset(self):
+        self.game.reset()
         self.game.score = 0
                             
     def on_draw(self):
@@ -22,10 +22,13 @@ class MainView(arcade.View):
         
     def on_update(self, delta_time: float):
         self.info_bar.score = int(self.game.score)
+        self.info_bar.dx = self.game.ship.change_x
+        self.info_bar.dy = self.game.ship.change_y
+        
         if self.game.goal_reached:
             self.info_bar.previous_score = int(self.game.score)
             if self.info_bar.max_score < self.game.score:
                 self.info_bar.max_score = int(self.game.score)
             self.game.goal_reached = False  
-            self.setup()
+            self.reset()
         

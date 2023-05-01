@@ -36,14 +36,15 @@ class Game(arcade.Section):
         self.goal_reached = False
         self.bullets = None
         self.bullet_texture = None
+        self.mouse = arcade.SpriteSolidColor(10, 10, arcade.color.YELLOW)
         self.bullet_force_x = 0.0
         self.bullet_force_y = 0.0
                 
         
-    def setup(self):
+    def reset(self):
         self.ship = ship.Ship(22, 25)
         self.world = world.World()
-        self.world.setup()
+        self.world.reset()
         
         start_x, start_y = self.world.find_starting_position()        
         self.ship.center_x = start_x
@@ -52,19 +53,15 @@ class Game(arcade.Section):
         self.physics_engine = arcade.PhysicsEngineSimple(self.ship, self.world.wall_list)
         self.world_camera = arcade.Camera(self.width, self.height)        
         self.bullets = arcade.SpriteList()
-        bullet_array = np.zeros((10, 10, 4), dtype=np.uint8)
-        bullet_array[:, :, 3] = 255
-        bullet_array[:, :, 0] = 255
-        self.bullet_texture = arcade.Texture(name = "bullet", image = Image.fromarray(bullet_array))
+        self.window.set_mouse_visible(False)
         
         
     def on_draw(self):
-
-        #self.clear()
         self.world_camera.use()
         self.world.draw()
         self.ship.draw()
         self.bullets.draw()
+        self.mouse.draw()
         
     def on_mouse_press(self, x, y, button, modifiers):
         self.mouse_x = x
@@ -72,10 +69,9 @@ class Game(arcade.Section):
         self.mouse_world_x = self.world_camera.position[0] + x
         self.mouse_world_y = self.world_camera.position[1] + y
         
-        bul = bullet.Bullet(self.bullet_texture)
+        bul = bullet.Bullet(self.ship.center_x, self.ship.center_y, 
+                            10, 10, arcade.color.RED)
         
-        bul.center_x = self.ship.center_x
-        bul.center_y = self.ship.center_y
         bul.angle = self.ship.turret_angle
         bul.change_x = math.cos(math.radians(bul.angle)) * BULLET_SPEED
         bul.change_y = math.sin(math.radians(bul.angle)) * BULLET_SPEED
@@ -172,3 +168,6 @@ class Game(arcade.Section):
                 bul.remove_from_sprite_lists()
             
         self.score-=delta_time
+        
+        self.mouse.center_x = self.mouse_world_x
+        self.mouse.center_y = self.mouse_world_y
