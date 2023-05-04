@@ -17,7 +17,7 @@ class World:
         self.object_list = arcade.SpriteList(use_spatial_hash=True)
         self.level = np.zeros((WORLD_WIDTH, WORLD_HEIGHT), dtype=np.uint8)
         self.fill_walls()
-        self.place_walls()
+        # self.place_walls()
         self.place_coins()
         self.level[2, 7] = 2
         self.level[17, 7] = 3
@@ -48,8 +48,9 @@ class World:
         self.level[(walls == 1) & (self.level == 0)] = 1
     
     def place_coins(self):
-        coins = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.9, 0.1])
-        self.level[(coins == 1) & (self.level == 0)] = 4
+        #coins = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.9, 0.1])
+        #self.level[(coins == 1) & (self.level == 0)] = 4
+        self.level[3:-3, 7] = 4
         
     def find_starting_position(self):
         starting_position = np.where(self.level == 2)

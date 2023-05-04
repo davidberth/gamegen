@@ -5,6 +5,7 @@ import bullet
 from params import *
 import hud
 import math
+import controller
 
 class Game(arcade.View):
     def __init__(self):
@@ -38,6 +39,8 @@ class Game(arcade.View):
         self.bullet_force_y = 0.0
         
         self.hud = hud.HUD(self.window.width, self.window.height, GUI_HEIGHT)
+        
+
                 
         
     def reset(self):
@@ -48,11 +51,16 @@ class Game(arcade.View):
         start_x, start_y = self.world.find_starting_position()        
         self.ship.center_x = start_x
         self.ship.center_y = start_y
+        self.ship.angle = 0
+        self.ship.change_x = 0
+        self.ship.change_y = 0
         
         self.physics_engine = arcade.PhysicsEngineSimple(self.ship, self.world.wall_list)
         self.world_camera = arcade.Camera(self.game_width, self.game_height)        
         self.bullets = arcade.SpriteList()
         self.window.set_mouse_visible(False)
+        
+        self.controller = controller.HumanController(self.window)
         
         
     def on_draw(self):
@@ -63,61 +71,33 @@ class Game(arcade.View):
         self.bullets.draw()
         self.mouse.draw()
         self.hud.draw()
-        
-    def on_mouse_press(self, x, y, button, modifiers):
-        self.mouse_x = x
-        self.mouse_y = y
-        self.mouse_world_x = self.world_camera.position[0] + x
-        self.mouse_world_y = self.world_camera.position[1] + y
-        
-        bul = bullet.Bullet(self.ship.center_x, self.ship.center_y, 
-                            10, 10, arcade.color.RED)
-        
-        bul.angle = self.ship.turret_angle
-        bul.change_x = math.cos(math.radians(bul.angle)) * BULLET_SPEED
-        bul.change_y = math.sin(math.radians(bul.angle)) * BULLET_SPEED
-        self.bullet_force_x = -bul.change_x * BULLET_FORCE
-        self.bullet_force_y = -bul.change_y * BULLET_FORCE
-        self.bullets.append(bul)
-        
-    def on_mouse_motion(self, x, y, dx, dy):
-        self.mouse_x = x 
-        self.mouse_y = y                
-    
-    def on_key_press(self, key, modifiers):
-           
-        if key == arcade.key.A:
-            self.key_left = True
-        elif key == arcade.key.D:
-            self.key_right = True
-        elif key == arcade.key.W:
-            self.key_up = True
-        elif key == arcade.key.S:
-            self.key_down = True
-                
-    def on_key_release(self, key, modifiers):
-        if key == arcade.key.A:
-            self.key_left = False
-        elif key == arcade.key.D:
-            self.key_right = False
-        elif key == arcade.key.W:
-            self.key_up = False
-        elif key == arcade.key.S:
-            self.key_down = False     
-        elif key == arcade.key.ESCAPE:
-            arcade.close_window()
-                
+                        
     def on_update(self, delta_time):
         x_force = 0.0
         y_force = 0.0
-        if self.key_left:
+        if self.controller.left:
             x_force-=PLAYER_MOVEMENT_FORCE
-        if self.key_right:
+        if self.controller.right:
             x_force+=PLAYER_MOVEMENT_FORCE
-        if self.key_up:
+        if self.controller.up:
             y_force+=PLAYER_MOVEMENT_FORCE
-        if self.key_down:
+        if self.controller.down:
             y_force-=PLAYER_MOVEMENT_FORCE
+            
+        if self.controller.fire:
+            self.mouse_world_x = self.world_camera.position[0] + self.controller.target_x
+            self.mouse_world_y = self.world_camera.position[1] + self.controller.target_y
+            
+            bul = bullet.Bullet(self.ship.center_x, self.ship.center_y, 
+                                10, 10, arcade.color.RED)
+            
+            bul.angle = self.ship.turret_angle
+            bul.change_x = math.cos(math.radians(bul.angle)) * BULLET_SPEED
+            bul.change_y = math.sin(math.radians(bul.angle)) * BULLET_SPEED
+            self.bullet_force_x = -bul.change_x * BULLET_FORCE
+            self.bullet_force_y = -bul.change_y * BULLET_FORCE
+            self.bullets.append(bul)
+            
                 
         self.ship.change_x+= x_force   
         self.ship.change_y+= y_force
