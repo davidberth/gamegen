@@ -1,0 +1,12 @@
+class KeyboardController(ControllerInterface):
+    def __init__(self, window):
+        self.window = window
+        
+        self.up = False
+        self.down = False
+        self.right = False
+        self.left = False
+        
+    def update(self):
+        # Collect inputs from the keyboard
+        # Example: return {'up': True, 'down': False, 'left': False, 'right': True}
