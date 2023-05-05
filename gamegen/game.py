@@ -40,8 +40,6 @@ class Game(arcade.View):
         
         self.hud = hud.HUD(self.window.width, self.window.height, GUI_HEIGHT)
         
-
-                
         
     def reset(self):
         self.ship = ship.Ship(22, 25)
@@ -60,7 +58,8 @@ class Game(arcade.View):
         self.bullets = arcade.SpriteList()
         self.window.set_mouse_visible(False)
         
-        self.controller = controller.HumanController(self.window)
+        self.controller = controller.HumanController(0, 0, self.window.width, self.window.height)
+        self.add_section(self.controller)
         
         
     def on_draw(self):
@@ -75,13 +74,13 @@ class Game(arcade.View):
     def on_update(self, delta_time):
         x_force = 0.0
         y_force = 0.0
-        if self.controller.left:
+        if self.controller.action_left:
             x_force-=PLAYER_MOVEMENT_FORCE
-        if self.controller.right:
+        if self.controller.action_right:
             x_force+=PLAYER_MOVEMENT_FORCE
-        if self.controller.up:
+        if self.controller.action_up:
             y_force+=PLAYER_MOVEMENT_FORCE
-        if self.controller.down:
+        if self.controller.action_down:
             y_force-=PLAYER_MOVEMENT_FORCE
             
         if self.controller.fire:

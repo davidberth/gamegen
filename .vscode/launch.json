@@ -8,7 +8,7 @@
             "name": "Game Agent",
             "type": "python",
             "request": "launch",
-            "program": "gamegen\\game.py",
+            "program": "gamegen\\main.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

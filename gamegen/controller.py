@@ -2,14 +2,15 @@ import arcade
 import abc
 from enum import Enum, auto
 
-class Controller(abc.ABC):
-    def __init__(self, window):
-        self.window = window
+class Controller(arcade.Section):
+    def __init__(self, left: int, bottom: int, width: int, height: int,
+                 **kwargs):
+        super().__init__(left, bottom, width, height, **kwargs)
         
-        self.down = False
-        self.up = False
-        self.right = False
-        self.left = False
+        self.action_down = False
+        self.action_up = False
+        self.action_right = False
+        self.action_left = False
         
         self.fire = False
         
@@ -17,43 +18,36 @@ class Controller(abc.ABC):
         self.target_y = 0
         
         self.exit = False
-
+        
     
 class HumanController(Controller):
-    def __init__(self, window):
-        super().__init__(window)
+    def __init__(self, left: int, bottom: int, width: int, height: int,
+                 **kwargs):
+        super().__init__(left, bottom, width, height, **kwargs)
 
-        arcade.register_event_handler(self.on_key_press)
-        arcade.register_event_handler(self.on_key_release)
-        arcade.register_event_handler(self.on_mouse_motion)
-        arcade.register_event_handler(self.on_mouse_press)
-        
-        #arcade.on_key_press = self.on_key_press
-        #arcade.on_key_release = self.on_key_release
-        #arcade.on_mouse_motion = self.on_mouse_motion
-        #arcade.on_mouse_press = self.on_mouse_press
-        
     def on_key_press(self, key, modifiers):
+        print (f'key was pressed!, {key}', self.right)
         if key == arcade.key.A:
-            self.left = True
+            self.action_left = True
         elif key == arcade.key.D:
-            self.right = True
+            self.action_right = True
         elif key == arcade.key.W:
-            self.up = True
+            self.action_up = True
         elif key == arcade.key.S:
-            self.down = True
+            self.action_down = True
         elif key == arcade.key.ESCAPE:
             self.exit = True
 
     def on_key_release(self, key, modifiers):
+        print ('key was released!')
         if key == arcade.key.A:
-            self.left = False
+            self.action_left = False
         elif key == arcade.key.D:
-            self.right = False
+            self.action_right = False
         elif key == arcade.key.W:
-            self.up = False
+            self.action_up = False
         elif key == arcade.key.S:
-            self.down = False
+            self.action_down = False
             
     def on_mouse_motion(self, x, y, dx, dy):
         self.target_x = x
