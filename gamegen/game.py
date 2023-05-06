@@ -8,7 +8,7 @@ import math
 import controller
 
 class Game(arcade.View):
-    def __init__(self):
+    def __init__(self, controller_type):
         super().__init__()
         arcade.set_background_color(arcade.color.BLACK)
         
@@ -17,10 +17,8 @@ class Game(arcade.View):
         self.key_right = False
         self.key_up = False
         self.key_down = False
-        self.mouse_x = 0
-        self.mouse_y = 0
-        self.mouse_world_x = 0
-        self.mouse_world_y = 0
+        self.target_world_x = 0
+        self.target_world_y = 0
         
         self.world = None
         self.gui = None
@@ -39,6 +37,16 @@ class Game(arcade.View):
         self.bullet_force_y = 0.0
         
         self.hud = hud.HUD(self.window.width, self.window.height, GUI_HEIGHT)
+        self.human_controller = controller.HumanController(0, 0, self.window.width, self.window.height)
+        self.nn_controller = controller.NNController(0, 0, self.window.width, self.window.height)
+        
+        if controller_type == 'human':
+            self.controller = self.human_controller
+        elif controller_type == 'nn':
+            self.controller = self.nn_controller
+        self.section_manager.clear_sections()
+        self.add_section(self.controller)
+        self.window.set_mouse_visible(False)
         
         
     def reset(self):
@@ -56,10 +64,6 @@ class Game(arcade.View):
         self.physics_engine = arcade.PhysicsEngineSimple(self.ship, self.world.wall_list)
         self.world_camera = arcade.Camera(self.game_width, self.game_height)        
         self.bullets = arcade.SpriteList()
-        self.window.set_mouse_visible(False)
-        
-        self.controller = controller.HumanController(0, 0, self.window.width, self.window.height)
-        self.add_section(self.controller)
         
         
     def on_draw(self):
@@ -84,8 +88,8 @@ class Game(arcade.View):
             y_force-=PLAYER_MOVEMENT_FORCE
             
         if self.controller.fire:
-            self.mouse_world_x = self.world_camera.position[0] + self.controller.target_x
-            self.mouse_world_y = self.world_camera.position[1] + self.controller.target_y
+            self.target_world_x = self.world_camera.position[0] + self.controller.target_x
+            self.target_world_y = self.world_camera.position[1] + self.controller.target_y
             
             bul = bullet.Bullet(self.ship.center_x, self.ship.center_y, 
                                 10, 10, arcade.color.RED)
@@ -112,10 +116,10 @@ class Game(arcade.View):
         self.ship.change_x+=self.bullet_force_x
         self.ship.change_y+=self.bullet_force_y
         
-        self.mouse_world_x = self.mouse_x + self.world_camera.position[0]
-        self.mouse_world_y = self.mouse_y + self.world_camera.position[1]   
+        self.target_world_x = self.controller.target_x + self.world_camera.position[0]
+        self.target_world_y = self.controller.target_y + self.world_camera.position[1]   
 
-        self.ship.update(self.mouse_world_x, self.mouse_world_y)
+        self.ship.update(self.target_world_x, self.target_world_y)
         self.ship.change_x *= SHIP_FRICTION
         self.ship.change_y *= SHIP_FRICTION
 
@@ -158,5 +162,5 @@ class Game(arcade.View):
             
         self.hud.score-=delta_time
         
-        self.mouse.center_x = self.mouse_world_x
-        self.mouse.center_y = self.mouse_world_y
+        self.mouse.center_x = self.target_world_x
+        self.mouse.center_y = self.target_world_y

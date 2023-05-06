@@ -4,7 +4,7 @@ import math
 class Ship(arcade.SpriteSolidColor):
 
     def __init__(self, width, height):
-        super().__init__(width, height, arcade.color.ASH_GREY)
+        super().__init__(width, height, arcade.color.CORAL_PINK)
 
         self.sprite_list = arcade.SpriteList()
         # Set up the base of the ship as a simple square
