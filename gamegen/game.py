@@ -7,9 +7,9 @@ import hud
 import math
 import controller
 
-class Game(arcade.View):
-    def __init__(self, controller_type):
-        super().__init__()
+class Game(arcade.Window):
+    def __init__(self, width, height, window_title, controller_type, **kwargs):
+        super().__init__(width, height, window_title, **kwargs)
         arcade.set_background_color(arcade.color.BLACK)
         
         self.ship = None
@@ -25,8 +25,8 @@ class Game(arcade.View):
         self.physics_engine = None
         self.world_camera = None
         
-        self.game_height = self.window.height - GUI_HEIGHT
-        self.game_width = self.window.width
+        self.game_height = self.height - GUI_HEIGHT
+        self.game_width = self.width
     
         self.game_half_width = self.game_width / 2
         self.game_half_height = self.game_height / 2
@@ -36,17 +36,18 @@ class Game(arcade.View):
         self.bullet_force_x = 0.0
         self.bullet_force_y = 0.0
         
-        self.hud = hud.HUD(self.window.width, self.window.height, GUI_HEIGHT)
-        self.human_controller = controller.HumanController(0, 0, self.window.width, self.window.height)
-        self.nn_controller = controller.NNController(0, 0, self.window.width, self.window.height)
+        self.hud = hud.HUD(self.width, self.height, GUI_HEIGHT)
+        self.human_controller = controller.HumanController(0, 0, self.width, self.height)
+        self.nn_controller = controller.NNController(0, 0, self.width, self.height)
         
+
         if controller_type == 'human':
             self.controller = self.human_controller
         elif controller_type == 'nn':
             self.controller = self.nn_controller
-        self.section_manager.clear_sections()
-        self.add_section(self.controller)
-        self.window.set_mouse_visible(False)
+        #self.section_manager.clear_sections()
+        #self.add_section(self.controller)
+        self.set_mouse_visible(False)
         
         
     def reset(self):
