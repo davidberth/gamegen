@@ -36,6 +36,8 @@ class World:
         self.world_pixel_height = WORLD_HEIGHT * TILE_HEIGHT
         self.world_pixel_width = WORLD_WIDTH * TILE_WIDTH
         
+        self.goal_x, self.goal_y = self.find_goal_position()
+        
         
     def fill_walls(self):
         self.level[0, :] = 1
@@ -56,6 +58,14 @@ class World:
         starting_position = np.where(self.level == 2)
         if starting_position:
             x, y = (starting_position[0][0] + 0.5) * TILE_WIDTH, (starting_position[1][0] + 0.5) * TILE_HEIGHT
+        else:
+            x, y = 100, 100
+        return x, y
+    
+    def find_goal_position(self):
+        goal_position = np.where(self.level == 2)
+        if goal_position:
+            x, y = (goal_position[0][0] + 0.5) * TILE_WIDTH, (goal_position[1][0] + 0.5) * TILE_HEIGHT
         else:
             x, y = 100, 100
         return x, y

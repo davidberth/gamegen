@@ -4,19 +4,18 @@ import ship
 import bullet
 from params import *
 import hud
-import math
 import controller
+import gymnasium as gym
+from gymnasium import spaces
+import numpy as np
 
-class Game(arcade.Window):
-    def __init__(self, width, height, window_title, controller_type, **kwargs):
+class Game(arcade.Window, gym.Env):
+    metadata = {"render_modes": ["human"], "render_fps": 4}
+    def __init__(self, width, height, window_title, controller_type, render_mode, **kwargs):
         super().__init__(width, height, window_title, **kwargs)
         arcade.set_background_color(arcade.color.BLACK)
         
         self.ship = None
-        self.key_left = False
-        self.key_right = False
-        self.key_up = False
-        self.key_down = False
         self.target_world_x = 0
         self.target_world_y = 0
         
@@ -39,16 +38,36 @@ class Game(arcade.Window):
         self.hud = hud.HUD(self.width, self.height, GUI_HEIGHT)
         self.human_controller = controller.HumanController(0, 0, self.width, self.height)
         self.nn_controller = controller.NNController(0, 0, self.width, self.height)
-        
 
         if controller_type == 'human':
             self.controller = self.human_controller
         elif controller_type == 'nn':
             self.controller = self.nn_controller
-        #self.section_manager.clear_sections()
-        #self.add_section(self.controller)
         self.set_mouse_visible(False)
         
+        self.observation_space = spaces.Dict(
+        {
+            "agent": spaces.Box(np.array([0.0, 0.0]), 
+                                np.array([WORLD_WIDTH*TILE_WIDTH, WORLD_HEIGHT*TILE_HEIGHT]), 
+                                shape=(2,), dtype=float),
+            "target": spaces.Box(np.array([0.0, 0.0]), 
+                                np.array([WORLD_WIDTH*TILE_WIDTH, WORLD_HEIGHT*TILE_HEIGHT]), 
+                                shape=(2,), dtype=float)
+        })
+        self.action_space = spaces.Discrete(4)
+    
+        assert render_mode is None or render_mode in self.metadata["render_modes"]
+        self.render_mode = render_mode
+
+    def _get_obs(self):
+        return {"agent": (self.ship.center_x, self.ship.center_y), "target": self.world.}
+  
+    def _get_info(self):
+        return {
+            "distance": np.linalg.norm(
+                self._agent_location - self._target_location, ord=1
+        )
+    }
         
     def reset(self):
         self.ship = ship.Ship(22, 25)

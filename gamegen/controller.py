@@ -16,16 +16,14 @@ class Controller(arcade.Section):
         
         self.target_x = 0
         self.target_y = 0
-        
         self.exit = False
         
 class NNController(Controller):
     def __init__(self, left: int, bottom: int, width: int, height: int,
                  **kwargs):
         super().__init__(left, bottom, width, height, **kwargs)
-        
-    def on_update(self, delta_time: float):
-        pass
+        self.action_right = True
+       
     
         
 class HumanController(Controller):
