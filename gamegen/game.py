@@ -60,16 +60,13 @@ class Game(arcade.Window, gym.Env):
         self.render_mode = render_mode
 
     def _get_obs(self):
-        return {"agent": (self.ship.center_x, self.ship.center_y), "target": self.world.}
+        return {"ship": (self.ship.center_x, self.ship.center_y), "target": self.world}
   
     def _get_info(self):
-        return {
-            "distance": np.linalg.norm(
-                self._agent_location - self._target_location, ord=1
-        )
-    }
+        return {self.hud.score}
         
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
         self.ship = ship.Ship(22, 25)
         self.world = world.World()
         self.world.reset()
@@ -85,8 +82,12 @@ class Game(arcade.Window, gym.Env):
         self.world_camera = arcade.Camera(self.game_width, self.game_height)        
         self.bullets = arcade.SpriteList()
         
+        observation= self._get_obs()
+        info = self._get_info()
+        return observation, info
         
-    def on_draw(self):
+        
+    def draw(self):
         self.clear()
         self.world_camera.use()
         self.world.draw()
@@ -95,7 +96,25 @@ class Game(arcade.Window, gym.Env):
         self.mouse.draw()
         self.hud.draw()
                         
-    def on_update(self, delta_time):
+    def step(self, action):
+        
+        self.dispatch_events()  
+        
+        self.controller.action_left = False
+        self.controller.action_right = False
+        self.controller.action_up = False
+        self.controller.action_down = False
+        self.controller.fire = False
+        
+        if action == 0:
+            self.controller.action_left = True
+        if action == 1:
+            self.controller.action_right = True
+        if action == 2:
+            self.controller.action_up = True
+        if action == 3:
+            self.controller.action_down = True
+        
         x_force = 0.0
         y_force = 0.0
         if self.controller.action_left:
@@ -180,7 +199,20 @@ class Game(arcade.Window, gym.Env):
                 bul.remove_from_sprite_lists()
                 results[0].color = arcade.color.DARK_BLUE_GRAY
             
-        self.hud.score-=delta_time
+        self.hud.score-=0.000001
         
         self.mouse.center_x = self.target_world_x
         self.mouse.center_y = self.target_world_y
+        
+        if self.render_mode == 'human':
+     
+            self.draw()
+            self.flip()
+     
+            
+        observation= self._get_obs()
+        info = self._get_info()
+        
+        return observation, info
+        
+        
