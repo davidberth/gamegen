@@ -106,13 +106,13 @@ class Game(arcade.Window, gym.Env):
         self.controller.action_down = False
         self.controller.fire = False
         
-        if action == 0:
-            self.controller.action_left = True
         if action == 1:
-            self.controller.action_right = True
+            self.controller.action_left = True
         if action == 2:
-            self.controller.action_up = True
+            self.controller.action_right = True
         if action == 3:
+            self.controller.action_up = True
+        if action == 4:
             self.controller.action_down = True
         
         x_force = 0.0

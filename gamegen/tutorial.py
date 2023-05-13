@@ -1,8 +1,11 @@
 import gymnasium as gym
+import gamegen
+
 
 from stable_baselines3 import PPO
 
-env = gym.make("CartPole-v1")
+env = gym.make("gamegen-v0", width=800, height = 600, window_title = 'game', controller_type = 'nn', 
+               render_mode = 'human')
 
 model = PPO("MlpPolicy", env, verbose=1)
 timesteps = 10000

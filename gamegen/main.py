@@ -10,19 +10,15 @@ def main():
     main_game = game.Game(width, height, WINDOW_TITLE, "nn", "human", fullscreen=FULLSCREEN, vsync=False, center_window=True)
     main_game.reset() 
 
-    
     # Custom game loop
     last_update_time = time.time()
     frame = 0
-    while frame < 15000:
+    while frame < 3000:
       
         main_game.step(2)    
-     
-     
+    
         #time.sleep(1/60)  # Sleep for 1/60 seconds to limit the frame rate to 60 FPS
         frame+=1
 
-
-    
 if __name__ == "__main__":
     main()
