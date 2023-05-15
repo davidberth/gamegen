@@ -47,23 +47,24 @@ class Game(arcade.Window, gym.Env):
         
         self.observation_space = spaces.Dict(
         {
-            "agent": spaces.Box(np.array([0.0, 0.0]), 
+            "ship": spaces.Box(np.array([0.0, 0.0]), 
                                 np.array([WORLD_WIDTH*TILE_WIDTH, WORLD_HEIGHT*TILE_HEIGHT]), 
                                 shape=(2,), dtype=float),
             "target": spaces.Box(np.array([0.0, 0.0]), 
                                 np.array([WORLD_WIDTH*TILE_WIDTH, WORLD_HEIGHT*TILE_HEIGHT]), 
                                 shape=(2,), dtype=float)
         })
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Discrete(5)
+        self.do_render = True
     
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
     def _get_obs(self):
-        return {"ship": (self.ship.center_x, self.ship.center_y), "target": self.world}
+        return {"ship": (self.ship.center_x, self.ship.center_y), "target": (self.world.goal_x, self.world.goal_y)}
   
     def _get_info(self):
-        return {self.hud.score}
+        return {'score':self.hud.score}
         
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -82,9 +83,15 @@ class Game(arcade.Window, gym.Env):
         self.world_camera = arcade.Camera(self.game_width, self.game_height)        
         self.bullets = arcade.SpriteList()
         
+        self.hud.score = 0
+        
         observation= self._get_obs()
         info = self._get_info()
         return observation, info
+    
+    def on_key_press(self, key, modifiers):
+        self.do_render = not self.do_render
+        print (self.do_render)
         
         
     def draw(self):
@@ -96,8 +103,7 @@ class Game(arcade.Window, gym.Env):
         self.mouse.draw()
         self.hud.draw()
                         
-    def step(self, action):
-        
+    def step(self, action):        
         self.dispatch_events()  
         
         self.controller.action_left = False
@@ -105,6 +111,7 @@ class Game(arcade.Window, gym.Env):
         self.controller.action_up = False
         self.controller.action_down = False
         self.controller.fire = False
+        terminated = False
         
         if action == 1:
             self.controller.action_left = True
@@ -140,6 +147,7 @@ class Game(arcade.Window, gym.Env):
             self.bullet_force_y = -bul.change_y * BULLET_FORCE
             self.bullets.append(bul)
             
+        reward = -0.0001
                 
         self.ship.change_x+= x_force   
         self.ship.change_y+= y_force
@@ -176,16 +184,17 @@ class Game(arcade.Window, gym.Env):
         results = self.ship.collides_with_list(self.world.object_list)
         if results:
             if results[0].tile_type == 4:
-                self.hud.score+=3
+                reward = 3
                 results[0].remove_from_sprite_lists()
             elif results[0].tile_type == 3:
-                self.hud.score+=10
+                reward = 10
                 self.hud.previous_score = int(self.hud.score)
                 if self.hud.max_score < self.hud.score:
                     self.hud.max_score = int(self.hud.score)
                 self.hud.score = 0.0
                 self.hud.episode+=1
-                self.reset()
+                terminated = True
+            
                 
         self.world_camera.move_to((camera_x, camera_y))
         
@@ -199,20 +208,21 @@ class Game(arcade.Window, gym.Env):
                 bul.remove_from_sprite_lists()
                 results[0].color = arcade.color.DARK_BLUE_GRAY
             
-        self.hud.score-=0.000001
+        self.hud.score+=reward
         
         self.mouse.center_x = self.target_world_x
         self.mouse.center_y = self.target_world_y
         
-        if self.render_mode == 'human':
-     
-            self.draw()
-            self.flip()
-     
+        if self.do_render:
+            if self.render_mode == 'human':
+        
+                self.draw()
+                self.flip()
+        
             
         observation= self._get_obs()
         info = self._get_info()
         
-        return observation, info
+        return observation, reward, terminated, False, info
         
         
