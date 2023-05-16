@@ -8,6 +8,7 @@ import controller
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
+import math
 
 class Game(arcade.Window, gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 4}
@@ -147,7 +148,6 @@ class Game(arcade.Window, gym.Env):
             self.bullet_force_y = -bul.change_y * BULLET_FORCE
             self.bullets.append(bul)
             
-        reward = -0.0001
                 
         self.ship.change_x+= x_force   
         self.ship.change_y+= y_force
@@ -180,6 +180,9 @@ class Game(arcade.Window, gym.Env):
         
         camera_x, camera_y = self.world.clamp_camera(camera_x, camera_y, 
                         self.game_width, self.game_height)
+       
+        reward = -math.sqrt(self.ship.change_x**2 + self.ship.change_y**2) / 50.0
+       
         
         results = self.ship.collides_with_list(self.world.object_list)
         if results:
