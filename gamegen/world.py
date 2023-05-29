@@ -26,7 +26,7 @@ class World:
 
         for x,y in zip(*sprite_locations):
             tile_type = self.level[x, y]
-            tile_sprite = Tile(x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, 1, tile_type)
+            tile_sprite = Tile(x, y, TILE_WIDTH, TILE_HEIGHT, 1, tile_type)
             
             if tile_type == 1:
                 self.wall_list.append(tile_sprite)
@@ -50,9 +50,9 @@ class World:
         self.level[(walls == 1) & (self.level == 0)] = 1
     
     def place_coins(self):
-        #coins = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.9, 0.1])
-        #self.level[(coins == 1) & (self.level == 0)] = 4
-        self.level[3:-3, 7] = 4
+        coins = np.random.choice([0,1], size=(WORLD_WIDTH, WORLD_HEIGHT), p=[0.9, 0.1])
+        self.level[(coins == 1) & (self.level == 0)] = 4
+        #self.level[3:-3, 7] = 4
         
     def find_starting_position(self):
         starting_position = np.where(self.level == 2)

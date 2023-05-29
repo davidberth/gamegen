@@ -15,7 +15,11 @@ class Tile(arcade.SpriteSolidColor):
         sprite_height = height - margin * 2
         super().__init__(sprite_width, sprite_height, color)
         self.alpha = tiles[tile_type][2]
-        self.center_x = x + sprite_width // 2
-        self.center_y = y + sprite_height // 2
+        self.center_x = x * sprite_width + sprite_width // 2
+        self.center_y = y * sprite_width + sprite_height // 2
         self.tile_type = tile_type
+        self.level_x = x
+        self.level_y = y
+        
+        
 

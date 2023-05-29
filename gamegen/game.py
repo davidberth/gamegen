@@ -53,7 +53,8 @@ class Game(arcade.Window, gym.Env):
                                 shape=(2,), dtype=float),
             "target": spaces.Box(np.array([0.0, 0.0]), 
                                 np.array([WORLD_WIDTH*TILE_WIDTH, WORLD_HEIGHT*TILE_HEIGHT]), 
-                                shape=(2,), dtype=float)
+                                shape=(2,), dtype=float),
+            "level": spaces.Box(0, 5, shape=(WORLD_WIDTH, WORLD_HEIGHT), dtype=int)
         })
         self.action_space = spaces.Discrete(5)
         self.do_render = True
@@ -62,7 +63,8 @@ class Game(arcade.Window, gym.Env):
         self.render_mode = render_mode
 
     def _get_obs(self):
-        return {"ship": (self.ship.center_x, self.ship.center_y), "target": (self.world.goal_x, self.world.goal_y)}
+        return {"ship": (self.ship.center_x, self.ship.center_y), "target": (self.world.goal_x, self.world.goal_y),
+                "level": self.world.level}
   
     def _get_info(self):
         return {'score':self.hud.score}
@@ -84,8 +86,13 @@ class Game(arcade.Window, gym.Env):
         self.world_camera = arcade.Camera(self.game_width, self.game_height)        
         self.bullets = arcade.SpriteList()
         
-        self.hud.score = 0
+        self.hud.previous_score = int(self.hud.score)
         
+        if self.hud.max_score < self.hud.score:
+            self.hud.max_score = int(self.hud.score)
+        self.hud.score = 0.0
+        self.hud.episode+=1
+
         observation= self._get_obs()
         info = self._get_info()
         return observation, info
@@ -181,21 +188,17 @@ class Game(arcade.Window, gym.Env):
         camera_x, camera_y = self.world.clamp_camera(camera_x, camera_y, 
                         self.game_width, self.game_height)
        
-        reward = -math.sqrt(self.ship.change_x**2 + self.ship.change_y**2) / 50.0
+        reward = -0.003
        
         
         results = self.ship.collides_with_list(self.world.object_list)
         if results:
             if results[0].tile_type == 4:
                 reward = 3
+                self.world.level[results[0].level_x,results[0].level_y] = 0
                 results[0].remove_from_sprite_lists()
             elif results[0].tile_type == 3:
-                reward = 10
-                self.hud.previous_score = int(self.hud.score)
-                if self.hud.max_score < self.hud.score:
-                    self.hud.max_score = int(self.hud.score)
-                self.hud.score = 0.0
-                self.hud.episode+=1
+                reward = 8
                 terminated = True
             
                 
